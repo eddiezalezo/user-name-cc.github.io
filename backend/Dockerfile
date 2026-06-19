@@ -13,4 +13,6 @@ COPY . .
 
 EXPOSE 8000
 
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+# Render/Railway inyectan el puerto vía $PORT; en local cae a 8000. Forma "shell" para
+# que la variable se expanda. Sin --reload en producción.
+CMD ["sh", "-c", "uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}"]

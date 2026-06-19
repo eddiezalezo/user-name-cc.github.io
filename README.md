@@ -3,6 +3,10 @@
 Organizador de expediente patrimonial digital para LATAM. **No es un testamento ni asesoría
 legal**: es una herramienta de organización, inventario y coordinación documental.
 
+> **¿Desplegarlo en público?** Ver [`DEPLOY.md`](./DEPLOY.md): frontend en Vercel + backend
+> en Render (Docker) con Postgres. El backend ya viene preparado para sesión cross-site
+> (cookie `SameSite=None; Secure` + CORS multi-origen) y hay un `render.yaml` listo.
+
 ## Principio de diseño: Zero-Knowledge real
 
 El backend **nunca** ve la master password de la bóveda ni los datos en claro de los

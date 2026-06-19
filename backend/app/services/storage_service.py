@@ -18,7 +18,17 @@ de MB (videos de mensajes póstumos, por ejemplo).
 import uuid
 from pathlib import Path
 
-STORAGE_ROOT = Path(__file__).resolve().parent.parent.parent / "storage"
+from app.config import get_settings
+
+# En dev local: carpeta `storage/` en la raíz del backend. En producción, apuntar
+# STORAGE_DIR (ver app/config.py) a un disco persistente montado (p. ej. /var/data en
+# Render); si no, los blobs se pierden en cada deploy porque el FS del contenedor es efímero.
+_configured_dir = get_settings().storage_dir
+STORAGE_ROOT = (
+    Path(_configured_dir)
+    if _configured_dir
+    else Path(__file__).resolve().parent.parent.parent / "storage"
+)
 
 
 class LocalDiskStorage:

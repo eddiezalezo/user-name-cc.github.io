@@ -20,13 +20,16 @@ COOKIE_MAX_AGE_SECONDS = 60 * 60 * 24 * 30  # 30 días, alineado con ACCESS_TOKE
 
 def _set_session_cookie(response: Response, token: str) -> None:
     # HttpOnly: no accesible desde JS -> reduce superficie de robo de sesión vía XSS.
-    # secure: ver app/config.py (cookie_secure) — debe ser True en producción (HTTPS).
+    # secure / samesite: ver app/config.py. En producción cross-site (front en Vercel,
+    # back en otro dominio) hace falta samesite="none" + secure=True para que la cookie
+    # viaje en las peticiones fetch; en dev local samesite="lax" + secure=False.
+    settings = get_settings()
     response.set_cookie(
         key=SESSION_COOKIE_NAME,
         value=token,
         httponly=True,
-        secure=get_settings().cookie_secure,
-        samesite="lax",
+        secure=settings.cookie_secure,
+        samesite=settings.cookie_samesite,
         max_age=COOKIE_MAX_AGE_SECONDS,
         path="/",
     )
@@ -61,7 +64,15 @@ def login(payload: UserLogin, response: Response, db: Session = Depends(get_db))
 
 @router.post("/logout", status_code=status.HTTP_204_NO_CONTENT)
 def logout(response: Response) -> None:
-    response.delete_cookie(SESSION_COOKIE_NAME, path="/")
+    settings = get_settings()
+    # Mismos atributos que al crearla: si no coinciden, algunos navegadores no la borran.
+    response.delete_cookie(
+        SESSION_COOKIE_NAME,
+        path="/",
+        secure=settings.cookie_secure,
+        samesite=settings.cookie_samesite,
+        httponly=True,
+    )
 
 
 @router.get("/me", response_model=UserOut)

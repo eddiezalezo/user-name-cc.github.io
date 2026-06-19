@@ -1,0 +1,68 @@
+# Render Blueprint para el BACKEND de Legado Digital (FastAPI + Postgres).
+# El frontend NO va aquí: se despliega en Vercel (ver DEPLOY.md).
+#
+# Cómo usarlo:
+#   1. En https://dashboard.render.com -> New -> Blueprint -> conectar este repo.
+#   2. Render detecta este archivo y crea el servicio web + la base de datos.
+#   3. Tras el primer deploy, rellena FRONTEND_ORIGIN con la URL real de tu front en Vercel
+#      (queda como "sync: false" justo para eso) y vuelve a desplegar.
+#
+# Docs: https://render.com/docs/blueprint-spec
+
+databases:
+  - name: legado-digital-db
+    databaseName: legado_digital
+    user: legado
+    plan: free        # El plan free de Postgres en Render expira a los ~30 días. Sube a
+                      # un plan de pago para producción real.
+
+services:
+  - type: web
+    name: legado-digital-api
+    runtime: docker
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
+    plan: starter     # El disco persistente (abajo) requiere plan de pago, no "free".
+    healthCheckPath: /health
+    autoDeploy: true
+
+    # Disco persistente para los blobs cifrados subidos (documentos). Sin esto, el FS del
+    # contenedor es efímero y los archivos se pierden en cada deploy/reinicio.
+    disk:
+      name: legado-storage
+      mountPath: /var/data
+      sizeGB: 1
+
+    envVars:
+      # Conexión a la Postgres de arriba. Render entrega "postgresql://...": config.py la
+      # normaliza a "postgresql+psycopg2://..." automáticamente.
+      - key: DATABASE_URL
+        fromDatabase:
+          name: legado-digital-db
+          property: connectionString
+
+      # Secreto de firma de la sesión de CUENTA (no toca la cripto zero-knowledge de la
+      # bóveda). Render genera un valor aleatorio fuerte.
+      - key: JWT_SECRET
+        generateValue: true
+      - key: JWT_ALGORITHM
+        value: HS256
+      - key: ACCESS_TOKEN_EXPIRE_MINUTES
+        value: "43200"   # 30 días
+
+      # Cookie de sesión en producción cross-site (front Vercel <-> back Render):
+      # secure=true + samesite=none son obligatorios o la sesión se cae con 401.
+      - key: COOKIE_SECURE
+        value: "true"
+      - key: COOKIE_SAMESITE
+        value: "none"
+
+      # Carpeta del disco persistente montado arriba.
+      - key: STORAGE_DIR
+        value: /var/data
+
+      # URL(s) del frontend permitidas por CORS. La rellenas TÚ en el dashboard de Render
+      # con la URL de Vercel (p. ej. https://legado-digital.vercel.app). Acepta varias
+      # separadas por coma si añades dominio propio.
+      - key: FRONTEND_ORIGIN
+        sync: false
