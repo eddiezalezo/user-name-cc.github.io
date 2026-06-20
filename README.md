@@ -6,6 +6,12 @@ legal**: es una herramienta de organización, inventario y coordinación documen
 > **¿Desplegarlo en público?** Ver [`DEPLOY.md`](./DEPLOY.md): frontend en Vercel + backend
 > en Render (Docker) con Postgres. El backend ya viene preparado para sesión cross-site
 > (cookie `SameSite=None; Secure` + CORS multi-origen) y hay un `render.yaml` listo.
+>
+> Publicar en 3 clics: backend con
+> [![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/eddiezalezo/user-name-cc.github.io)
+> y frontend con
+> [![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/eddiezalezo/user-name-cc.github.io&root-directory=frontend&project-name=legado-digital&env=NEXT_PUBLIC_API_URL).
+> Pasos y "cerrar el círculo" (CORS) en [`DEPLOY.md`](./DEPLOY.md).
 
 ## Principio de diseño: Zero-Knowledge real
 

@@ -1,5 +1,31 @@
 # Despliegue público de Legado Digital
 
+## 🚀 Publicar rápido (3 clics)
+
+**1. Backend + Postgres en Render** — pulsa el botón, inicia sesión en Render y *Apply*
+(lee `render.yaml` solo):
+
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/eddiezalezo/user-name-cc.github.io)
+
+Cuando termine, copia la URL del servicio (p. ej. `https://legado-digital-api.onrender.com`)
+y verifica `…/health`.
+
+**2. Frontend en Vercel** — importa este repo:
+
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/eddiezalezo/user-name-cc.github.io&root-directory=frontend&project-name=legado-digital&env=NEXT_PUBLIC_API_URL&envDescription=URL%20del%20backend%20en%20Render%20del%20paso%201)
+
+> En la pantalla de Vercel confirma **Root Directory = `frontend`** y pega en
+> `NEXT_PUBLIC_API_URL` la URL del backend del paso 1. *Deploy*. Copia tu URL `…vercel.app`.
+
+**3. Cerrar el círculo** — en Render → *Environment* → pon `FRONTEND_ORIGIN` = la URL de
+Vercel del paso 2 → se redespliega solo. Listo, ya puedes registrarte y usar el SaaS.
+
+> ¿Por qué no lo dejé yo desplegado? El entorno donde corro tiene la red restringida (no
+> alcanza Render/Vercel) y no tengo acceso a tus cuentas. Estos botones lo dejan a un par de
+> clics tuyos. El detalle completo y el troubleshooting están abajo.
+
+---
+
 Legado Digital es una app **full-stack** (Next.js con render en servidor + FastAPI + Postgres).
 No se puede servir como sitio estático de GitHub Pages. La estrategia pública es:
 
