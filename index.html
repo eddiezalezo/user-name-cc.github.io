@@ -1,0 +1,1041 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RadarNewsOS — El Guardián del Margen Delivery</title>
+<meta name="description" content="Detecta las fugas de dinero de tu menú de delivery: comisiones, inflación de insumos y retenciones fiscales, en un solo radar.">
+<style>
+  :root {
+    --surface-1: #fcfcfb;
+    --page: #f9f9f7;
+    --ink-1: #0b0b0b;
+    --ink-2: #52514e;
+    --ink-3: #898781;
+    --grid: #e1e0d9;
+    --baseline: #c3c2b7;
+    --border: rgba(11,11,11,0.10);
+    --accent: #2a78d6;
+    --accent-ink: #1c5cab;
+    --accent-soft: #cde2fb;
+    --series-1: #2a78d6;
+    --series-2: #1baf7a;
+    --series-3: #eda100;
+    --status-good: #0ca30c;
+    --status-good-text: #006300;
+    --status-warn: #fab219;
+    --status-warn-text: #8a5a00;
+    --status-critical: #d03b3b;
+    --status-critical-text: #b02a2a;
+    --good-soft: rgba(12,163,12,0.10);
+    --warn-soft: rgba(250,178,25,0.14);
+    --critical-soft: rgba(208,59,59,0.10);
+    --shadow: 0 1px 2px rgba(11,11,11,0.05), 0 4px 16px rgba(11,11,11,0.06);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --surface-1: #1a1a19;
+      --page: #0d0d0d;
+      --ink-1: #ffffff;
+      --ink-2: #c3c2b7;
+      --ink-3: #898781;
+      --grid: #2c2c2a;
+      --baseline: #383835;
+      --border: rgba(255,255,255,0.10);
+      --accent: #3987e5;
+      --accent-ink: #86b6ef;
+      --accent-soft: #104281;
+      --series-1: #3987e5;
+      --series-2: #199e70;
+      --series-3: #c98500;
+      --status-good-text: #0ca30c;
+      --status-warn-text: #fab219;
+      --status-critical-text: #e66767;
+      --good-soft: rgba(12,163,12,0.16);
+      --warn-soft: rgba(250,178,25,0.16);
+      --critical-soft: rgba(208,59,59,0.18);
+      --shadow: 0 1px 2px rgba(0,0,0,0.4), 0 4px 16px rgba(0,0,0,0.35);
+    }
+  }
+  :root[data-theme="dark"] {
+    --surface-1: #1a1a19; --page: #0d0d0d; --ink-1: #ffffff; --ink-2: #c3c2b7;
+    --ink-3: #898781; --grid: #2c2c2a; --baseline: #383835; --border: rgba(255,255,255,0.10);
+    --accent: #3987e5; --accent-ink: #86b6ef; --accent-soft: #104281;
+    --series-1: #3987e5; --series-2: #199e70; --series-3: #c98500;
+    --status-good-text: #0ca30c; --status-warn-text: #fab219; --status-critical-text: #e66767;
+    --good-soft: rgba(12,163,12,0.16); --warn-soft: rgba(250,178,25,0.16); --critical-soft: rgba(208,59,59,0.18);
+    --shadow: 0 1px 2px rgba(0,0,0,0.4), 0 4px 16px rgba(0,0,0,0.35);
+  }
+  :root[data-theme="light"] {
+    --surface-1: #fcfcfb; --page: #f9f9f7; --ink-1: #0b0b0b; --ink-2: #52514e;
+    --ink-3: #898781; --grid: #e1e0d9; --baseline: #c3c2b7; --border: rgba(11,11,11,0.10);
+    --accent: #2a78d6; --accent-ink: #1c5cab; --accent-soft: #cde2fb;
+    --series-1: #2a78d6; --series-2: #1baf7a; --series-3: #eda100;
+    --status-good-text: #006300; --status-warn-text: #8a5a00; --status-critical-text: #b02a2a;
+    --good-soft: rgba(12,163,12,0.10); --warn-soft: rgba(250,178,25,0.14); --critical-soft: rgba(208,59,59,0.10);
+    --shadow: 0 1px 2px rgba(11,11,11,0.05), 0 4px 16px rgba(11,11,11,0.06);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+    background: var(--page);
+    color: var(--ink-1);
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }
+  button { font: inherit; cursor: pointer; }
+  input, select { font: inherit; color: var(--ink-1); }
+
+  /* ---------- Nav ---------- */
+  header.topbar {
+    position: sticky; top: 0; z-index: 50;
+    background: var(--surface-1);
+    border-bottom: 1px solid var(--border);
+    box-shadow: var(--shadow);
+  }
+  .topbar-inner {
+    max-width: 1080px; margin: 0 auto; padding: 10px 20px;
+    display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
+  }
+  .logo { display: flex; align-items: center; gap: 9px; font-weight: 750; font-size: 17px; letter-spacing: -0.01em; }
+  .logo svg { flex: none; }
+  .logo .os { color: var(--accent); }
+  .logo .beta {
+    font-size: 10px; font-weight: 700; letter-spacing: 0.06em; color: var(--accent-ink);
+    background: var(--accent-soft); border-radius: 99px; padding: 2px 8px; text-transform: uppercase;
+  }
+  nav.tabs { display: flex; gap: 4px; margin-left: auto; flex-wrap: wrap; }
+  nav.tabs button {
+    border: none; background: none; color: var(--ink-2);
+    padding: 7px 13px; border-radius: 8px; font-weight: 550; font-size: 14px;
+  }
+  nav.tabs button:hover { background: var(--page); color: var(--ink-1); }
+  nav.tabs button.active { background: var(--accent); color: #fff; }
+
+  main { max-width: 1080px; margin: 0 auto; padding: 28px 20px 80px; }
+  section.view { display: none; }
+  section.view.active { display: block; animation: fadein .25s ease; }
+  @keyframes fadein { from { opacity: 0; transform: translateY(6px);} to { opacity: 1; transform: none;} }
+
+  /* ---------- Shared ---------- */
+  .card {
+    background: var(--surface-1); border: 1px solid var(--border);
+    border-radius: 14px; padding: 22px; box-shadow: var(--shadow);
+  }
+  .eyebrow {
+    font-size: 12px; font-weight: 700; letter-spacing: 0.09em; text-transform: uppercase;
+    color: var(--accent-ink); margin-bottom: 8px;
+  }
+  h1 { font-size: clamp(30px, 5vw, 44px); line-height: 1.12; letter-spacing: -0.02em; font-weight: 800; }
+  h2 { font-size: 24px; letter-spacing: -0.015em; margin-bottom: 6px; }
+  h3 { font-size: 16.5px; margin-bottom: 4px; }
+  .sub { color: var(--ink-2); font-size: 15.5px; }
+  .btn {
+    display: inline-flex; align-items: center; gap: 8px; justify-content: center;
+    background: var(--accent); color: #fff; border: none; border-radius: 10px;
+    padding: 11px 20px; font-weight: 650; font-size: 15px;
+    transition: filter .15s ease, transform .1s ease;
+  }
+  .btn:hover { filter: brightness(1.08); }
+  .btn:active { transform: scale(.98); }
+  .btn.ghost {
+    background: none; color: var(--accent-ink); border: 1.5px solid var(--accent);
+  }
+  .btn.small { padding: 7px 14px; font-size: 13.5px; border-radius: 8px; }
+  .btn[disabled] { opacity: .55; cursor: default; }
+  .btn.done { background: var(--status-good); }
+
+  .chip {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: 12.5px; font-weight: 650; border-radius: 99px; padding: 3px 11px 3px 8px;
+    white-space: nowrap;
+  }
+  .chip .dot { width: 8px; height: 8px; border-radius: 50%; flex: none; }
+  .chip.rojo { background: var(--critical-soft); color: var(--status-critical-text); }
+  .chip.rojo .dot { background: var(--status-critical); }
+  .chip.amarillo { background: var(--warn-soft); color: var(--status-warn-text); }
+  .chip.amarillo .dot { background: var(--status-warn); }
+  .chip.verde { background: var(--good-soft); color: var(--status-good-text); }
+  .chip.verde .dot { background: var(--status-good); }
+
+  .grid2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; }
+  .grid3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 16px; }
+  .grid4 { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px; }
+
+  label.field { display: block; font-size: 13px; font-weight: 650; color: var(--ink-2); margin-bottom: 12px; }
+  label.field input, label.field select {
+    display: block; width: 100%; margin-top: 5px; padding: 9px 11px;
+    border: 1px solid var(--baseline); border-radius: 9px; background: var(--page);
+    font-size: 14.5px; font-weight: 450;
+  }
+  label.field input:focus, label.field select:focus { outline: 2px solid var(--accent); border-color: transparent; }
+
+  table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  th { text-align: left; font-size: 12px; text-transform: uppercase; letter-spacing: .05em; color: var(--ink-3); font-weight: 650; padding: 8px 10px; border-bottom: 1px solid var(--grid); }
+  td { padding: 9px 10px; border-bottom: 1px solid var(--grid); vertical-align: middle; }
+  tr:last-child td { border-bottom: none; }
+  td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+  .tablewrap { overflow-x: auto; }
+
+  /* ---------- Home ---------- */
+  .hero { padding: 44px 0 12px; display: grid; grid-template-columns: 1.2fr .8fr; gap: 36px; align-items: center; }
+  @media (max-width: 820px) { .hero { grid-template-columns: 1fr; } }
+  .hero .promise {
+    margin: 18px 0 22px; padding: 14px 18px; border-left: 4px solid var(--accent);
+    background: var(--surface-1); border-radius: 0 12px 12px 0; color: var(--ink-2); font-size: 15.5px;
+    box-shadow: var(--shadow);
+  }
+  .hero .promise strong { color: var(--ink-1); }
+  .hero-ctas { display: flex; gap: 12px; flex-wrap: wrap; }
+  .radar-demo { position: relative; aspect-ratio: 1; max-width: 340px; margin: 0 auto; width: 100%; }
+  .radar-demo svg { width: 100%; height: 100%; }
+  .sweep { transform-origin: 100px 100px; animation: sweep 4s linear infinite; }
+  @keyframes sweep { to { transform: rotate(360deg); } }
+  .blip { animation: blip 4s ease-out infinite; }
+  @keyframes blip { 0%,12% { opacity: 0; } 18% { opacity: 1; } 70% { opacity: .85; } 100% { opacity: 0; } }
+  .blip.b2 { animation-delay: 1.3s; }
+  .blip.b3 { animation-delay: 2.5s; }
+
+  .steps { counter-reset: paso; margin-top: 40px; }
+  .step-card { position: relative; padding-top: 54px; }
+  .step-card::before {
+    counter-increment: paso; content: counter(paso);
+    position: absolute; top: 18px; left: 22px;
+    width: 28px; height: 28px; border-radius: 50%;
+    background: var(--accent); color: #fff; font-weight: 750; font-size: 14px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .pricing { margin-top: 44px; }
+  .price-card h3 { font-size: 18px; }
+  .price { font-size: 38px; font-weight: 800; letter-spacing: -0.02em; margin: 8px 0 2px; }
+  .price small { font-size: 14px; font-weight: 550; color: var(--ink-3); letter-spacing: 0; }
+  .price-card ul { list-style: none; margin: 14px 0 18px; }
+  .price-card li { padding: 5px 0 5px 26px; position: relative; color: var(--ink-2); font-size: 14.5px; }
+  .price-card li::before { content: "✓"; position: absolute; left: 2px; color: var(--status-good-text); font-weight: 800; }
+  .price-card.pro { border: 2px solid var(--accent); position: relative; }
+  .price-card.pro .tag {
+    position: absolute; top: -11px; left: 20px; background: var(--accent); color: #fff;
+    font-size: 11px; font-weight: 750; letter-spacing: .07em; text-transform: uppercase;
+    padding: 3px 10px; border-radius: 99px;
+  }
+
+  /* ---------- Auditor ---------- */
+  .wizard-head { display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap; margin-bottom: 18px; }
+  .free-tag { background: var(--good-soft); color: var(--status-good-text); font-weight: 750; font-size: 12px; letter-spacing: .06em; text-transform: uppercase; padding: 3px 11px; border-radius: 99px; }
+  .app-toggles { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 6px; }
+  .app-toggle {
+    display: flex; align-items: center; gap: 10px;
+    border: 1.5px solid var(--baseline); border-radius: 11px; padding: 10px 14px;
+    background: var(--page); user-select: none; cursor: pointer; transition: border-color .15s;
+  }
+  .app-toggle.on { border-color: var(--accent); background: var(--surface-1); box-shadow: var(--shadow); }
+  .app-toggle input[type="checkbox"] { width: 16px; height: 16px; accent-color: var(--accent); }
+  .app-toggle .name { font-weight: 700; font-size: 14px; }
+  .app-toggle .com { font-size: 12px; color: var(--ink-3); }
+  .app-toggle .com input { width: 52px; padding: 2px 5px; border: 1px solid var(--baseline); border-radius: 6px; background: var(--surface-1); font-size: 12.5px; text-align: right; }
+  .menu-table input { width: 100%; min-width: 64px; padding: 6px 8px; border: 1px solid var(--baseline); border-radius: 7px; background: var(--page); font-size: 13.5px; }
+  .menu-table input.name-in { min-width: 150px; }
+  .menu-table td { padding: 6px 6px; }
+
+  .hero-number { font-size: clamp(40px, 6vw, 58px); font-weight: 800; letter-spacing: -0.025em; line-height: 1.05; }
+  .hero-number.leak { color: var(--status-critical-text); }
+  .result-note { font-size: 13px; color: var(--ink-3); margin-top: 10px; }
+  .dish-result { margin-bottom: 14px; }
+  .dish-head { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 8px; }
+  .dish-head h3 { margin: 0; }
+  .dish-head .cost { font-size: 13px; color: var(--ink-3); margin-left: auto; }
+  .appbar-row { display: grid; grid-template-columns: 92px 1fr 168px; gap: 10px; align-items: center; padding: 5px 0; font-size: 13.5px; }
+  @media (max-width: 560px) { .appbar-row { grid-template-columns: 80px 1fr; } .appbar-row .chipcell { grid-column: 2; justify-self: end; } }
+  .appbar-row .appname { color: var(--ink-2); font-weight: 600; }
+  .appbar-track { position: relative; height: 16px; background: var(--page); border-radius: 5px; overflow: hidden; }
+  .appbar-fill { position: absolute; inset: 0 auto 0 0; border-radius: 4px; min-width: 2px; }
+  .appbar-fill.rojo { background: var(--status-critical); }
+  .appbar-fill.amarillo { background: var(--status-warn); }
+  .appbar-fill.verde { background: var(--status-good); }
+  .chipcell { display: flex; align-items: center; gap: 8px; justify-content: flex-end; }
+  .chipcell .mval { font-variant-numeric: tabular-nums; font-weight: 700; font-size: 13px; min-width: 52px; text-align: right; }
+  .sugerencia { font-size: 13.5px; color: var(--ink-2); margin-top: 8px; padding: 8px 12px; background: var(--page); border-radius: 8px; }
+  .sugerencia strong { color: var(--ink-1); }
+
+  /* ---------- Panel ---------- */
+  .kpi-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(215px, 1fr)); gap: 14px; margin-bottom: 18px; }
+  .kpi { padding: 16px 18px; }
+  .kpi .k-label { font-size: 12.5px; font-weight: 650; color: var(--ink-3); text-transform: uppercase; letter-spacing: .05em; }
+  .kpi .k-value { font-size: 30px; font-weight: 800; letter-spacing: -0.02em; margin-top: 4px; }
+  .kpi .k-delta { font-size: 13px; font-weight: 650; margin-top: 2px; }
+  .k-delta.up { color: var(--status-good-text); }
+  .k-delta.down { color: var(--status-critical-text); }
+  .k-delta.flat { color: var(--ink-3); font-weight: 500; }
+
+  .panel-grid { display: grid; grid-template-columns: 1.15fr .85fr; gap: 16px; margin-bottom: 16px; }
+  @media (max-width: 880px) { .panel-grid { grid-template-columns: 1fr; } }
+
+  .legend { display: flex; gap: 16px; flex-wrap: wrap; margin: 6px 0 4px; font-size: 13px; color: var(--ink-2); }
+  .legend .li { display: inline-flex; align-items: center; gap: 7px; font-weight: 600; }
+  .legend .sw { width: 14px; height: 4px; border-radius: 2px; }
+  .chart-wrap { position: relative; }
+  .chart-tip {
+    position: absolute; pointer-events: none; display: none; z-index: 5;
+    background: var(--surface-1); border: 1px solid var(--border); border-radius: 10px;
+    box-shadow: var(--shadow); padding: 9px 12px; font-size: 12.5px; min-width: 150px;
+  }
+  .chart-tip .t-head { font-weight: 700; margin-bottom: 4px; }
+  .chart-tip .t-row { display: flex; align-items: center; gap: 7px; padding: 1.5px 0; color: var(--ink-2); }
+  .chart-tip .t-row .sw { width: 9px; height: 9px; border-radius: 50%; flex: none; }
+  .chart-tip .t-row b { margin-left: auto; font-variant-numeric: tabular-nums; color: var(--ink-1); }
+
+  .wa-feed { display: flex; flex-direction: column; gap: 10px; max-height: 430px; overflow-y: auto; padding-right: 4px; }
+  .wa-msg {
+    background: var(--page); border: 1px solid var(--border); border-radius: 12px 12px 12px 3px;
+    padding: 11px 14px; font-size: 13.5px; max-width: 95%;
+  }
+  .wa-msg .wa-meta { display: flex; align-items: center; gap: 8px; margin-bottom: 5px; }
+  .wa-msg .wa-time { font-size: 11px; color: var(--ink-3); margin-left: auto; }
+  .wa-msg p { color: var(--ink-2); }
+  .wa-msg p strong { color: var(--ink-1); }
+  .wa-actions { display: flex; gap: 8px; margin-top: 9px; flex-wrap: wrap; }
+
+  .push-status { font-size: 12px; font-weight: 650; display: flex; gap: 8px; flex-wrap: wrap; }
+  .push-status span { color: var(--ink-3); }
+  .push-status span.ok { color: var(--status-good-text); }
+
+  .promo-result { margin-top: 16px; padding: 16px; border-radius: 12px; background: var(--page); border: 1px solid var(--border); }
+  .promo-verdict { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; flex-wrap: wrap; }
+  .promo-nums { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin-top: 10px; }
+  .promo-nums .pn { background: var(--surface-1); border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px; }
+  .promo-nums .pn .l { font-size: 11.5px; color: var(--ink-3); font-weight: 650; text-transform: uppercase; letter-spacing: .04em; }
+  .promo-nums .pn .v { font-size: 19px; font-weight: 750; font-variant-numeric: tabular-nums; margin-top: 2px; }
+
+  /* ---------- Plan ---------- */
+  .plan-section { margin-bottom: 22px; }
+  .risk { border-left: 4px solid var(--status-warn); }
+  .mono-num { font-variant-numeric: tabular-nums; }
+  .footer-note { margin-top: 48px; text-align: center; font-size: 12.5px; color: var(--ink-3); }
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="topbar-inner">
+    <div class="logo">
+      <svg width="26" height="26" viewBox="0 0 26 26" aria-hidden="true">
+        <circle cx="13" cy="13" r="11.5" fill="none" stroke="var(--accent)" stroke-width="1.6"/>
+        <circle cx="13" cy="13" r="6.5" fill="none" stroke="var(--accent)" stroke-width="1" opacity=".45"/>
+        <path d="M13 13 L13 2.5 A10.5 10.5 0 0 1 21 6.8 Z" fill="var(--accent)" opacity=".8"/>
+        <circle cx="8.5" cy="17" r="2" fill="var(--status-critical)"/>
+      </svg>
+      <span>RadarNews<span class="os">OS</span></span>
+      <span class="beta">MVP</span>
+    </div>
+    <nav class="tabs" id="tabs">
+      <button data-view="home" class="active">Inicio</button>
+      <button data-view="auditor">Auditor gratis</button>
+      <button data-view="panel">Panel Pro</button>
+      <button data-view="plan">Plan de negocio</button>
+    </nav>
+  </div>
+</header>
+
+<main>
+
+<!-- ============ INICIO ============ -->
+<section class="view active" id="view-home">
+  <div class="hero">
+    <div>
+      <div class="eyebrow">El guardián del margen delivery</div>
+      <h1>Tu menú está perdiendo dinero en Rappi. Nosotros te decimos exactamente dónde.</h1>
+      <div class="promise">
+        <strong>Garantía:</strong> identificamos al menos <strong>$15,000 MXN al mes en fugas de dinero</strong>
+        dentro de tu menú de delivery en los primeros 14 días — o tu suscripción es gratis.
+      </div>
+      <div class="hero-ctas">
+        <button class="btn" data-goto="auditor">📡 Auditar mi menú gratis</button>
+        <button class="btn ghost" data-goto="panel">Ver el Panel Pro en acción</button>
+      </div>
+    </div>
+    <div class="radar-demo" aria-hidden="true">
+      <svg viewBox="0 0 200 200">
+        <circle cx="100" cy="100" r="92" fill="none" stroke="var(--grid)" stroke-width="1.5"/>
+        <circle cx="100" cy="100" r="64" fill="none" stroke="var(--grid)" stroke-width="1"/>
+        <circle cx="100" cy="100" r="36" fill="none" stroke="var(--grid)" stroke-width="1"/>
+        <line x1="8" y1="100" x2="192" y2="100" stroke="var(--grid)" stroke-width="1"/>
+        <line x1="100" y1="8" x2="100" y2="192" stroke="var(--grid)" stroke-width="1"/>
+        <path class="sweep" d="M100 100 L100 8 A92 92 0 0 1 165 35 Z" fill="var(--accent)" opacity="0.35"/>
+        <g class="blip"><circle cx="138" cy="62" r="6" fill="var(--status-critical)"/><text x="138" y="48" text-anchor="middle" font-size="10" font-weight="700" fill="var(--status-critical-text)">Guacamole −$9</text></g>
+        <g class="blip b2"><circle cx="62" cy="128" r="6" fill="var(--status-warn)"/><text x="62" y="148" text-anchor="middle" font-size="10" font-weight="700" fill="var(--status-warn-text)">Alitas 7%</text></g>
+        <g class="blip b3"><circle cx="128" cy="142" r="6" fill="var(--status-critical)"/><text x="128" y="160" text-anchor="middle" font-size="10" font-weight="700" fill="var(--status-critical-text)">2×1 −$41</text></g>
+        <circle cx="100" cy="100" r="3.5" fill="var(--accent)"/>
+      </svg>
+    </div>
+  </div>
+
+  <div class="grid3 steps">
+    <div class="card step-card">
+      <h3>Registra tu menú en 3 minutos</h3>
+      <p class="sub">Solo tu correo, WhatsApp y tus 5 platillos estrella. Sin instalar nada, sin tocar tu punto de venta.</p>
+    </div>
+    <div class="card step-card">
+      <h3>El radar detecta las fugas</h3>
+      <p class="sub">Calculamos comisiones por app, empaque, mermas y retenciones fiscales (IVA/ISR por Plataformas Tecnológicas) para tu margen <em>real</em>.</p>
+    </div>
+    <div class="card step-card">
+      <h3>Corrige con 1 clic</h3>
+      <p class="sub">Recibe el precio sugerido por WhatsApp y empújalo a Rappi, DiDi y Uber Eats desde una sola pantalla.</p>
+    </div>
+  </div>
+
+  <div class="pricing">
+    <h2>Precios simples</h2>
+    <p class="sub" style="margin-bottom:18px;">Empieza gratis. Paga solo cuando el radar ya te esté cuidando el margen todos los días.</p>
+    <div class="grid2">
+      <div class="card price-card">
+        <h3>Auditoría Gratis</h3>
+        <div class="price">$0 <small>para siempre</small></div>
+        <ul>
+          <li>Diagnóstico semáforo de tus 5 platillos estrella</li>
+          <li>Cálculo de comisiones Rappi / DiDi / Uber Eats</li>
+          <li>Retenciones fiscales (Persona Física o Moral)</li>
+          <li>Fuga mensual estimada de tu menú</li>
+        </ul>
+        <button class="btn ghost" data-goto="auditor" style="width:100%;">Empezar auditoría</button>
+      </div>
+      <div class="card price-card pro">
+        <span class="tag">Recomendado</span>
+        <h3>Suscripción Pro</h3>
+        <div class="price">$79 USD <small>/ mes por sucursal (≈ $1,450 MXN)</small></div>
+        <ul>
+          <li>Todo lo del plan gratis, para el menú completo</li>
+          <li>Monitoreo de inflación de insumos en vivo</li>
+          <li>Alertas inteligentes por WhatsApp</li>
+          <li>Cambio de precios con 1 clic en las 3 apps</li>
+          <li>Simulador de promociones (2×1, envío gratis)</li>
+        </ul>
+        <button class="btn" data-goto="panel" style="width:100%;">Ver demo del Panel Pro</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ AUDITOR (MÓDULO 1) ============ -->
+<section class="view" id="view-auditor">
+  <div class="wizard-head">
+    <h2 style="margin:0;">Auditor de Delivery</h2>
+    <span class="free-tag">Módulo 1 · Gratis</span>
+  </div>
+  <p class="sub" style="margin-bottom:20px;">Captura tus 5 platillos estrella y descubre cuánto dinero se te fuga cada mes entre comisiones, empaque, mermas y retenciones fiscales. <strong>Datos precargados de demo</strong> — edítalos con los de tu restaurante.</p>
+
+  <div class="grid2" style="margin-bottom:16px;">
+    <div class="card">
+      <h3>1 · Tu restaurante</h3>
+      <div class="grid2" style="gap:0 14px; margin-top:12px;">
+        <label class="field">Nombre del restaurante
+          <input id="in-nombre" value="Smash Burgers La Capital">
+        </label>
+        <label class="field">Pedidos de delivery al mes (por sucursal)
+          <input id="in-pedidos" type="number" min="50" step="50" value="1500">
+        </label>
+        <label class="field">Correo
+          <input id="in-correo" type="email" placeholder="dueño@turestaurante.mx" value="hola@smashlacapital.mx">
+        </label>
+        <label class="field">WhatsApp
+          <input id="in-wa" placeholder="+52 55 0000 0000" value="+52 55 1234 5678">
+        </label>
+        <label class="field">Régimen fiscal
+          <select id="in-regimen">
+            <option value="pf" selected>Persona Física (retención ISR 1% + IVA 8%)</option>
+            <option value="pm">Persona Moral (sin retención en plataforma)</option>
+          </select>
+        </label>
+      </div>
+    </div>
+    <div class="card">
+      <h3>2 · Tus apps de delivery</h3>
+      <p class="sub" style="font-size:13.5px; margin-top:4px;">Activa las que usas y ajusta la comisión de tu contrato.</p>
+      <div class="app-toggles" id="app-toggles"></div>
+      <p class="result-note">Comisiones típicas del mercado precargadas. El IVA de la comisión es acreditable; el cálculo usa tu ingreso sin IVA como base.</p>
+    </div>
+  </div>
+
+  <div class="card" style="margin-bottom:16px;">
+    <h3>3 · Tus 5 platillos estrella</h3>
+    <p class="sub" style="font-size:13.5px; margin:4px 0 12px;">Precio tal como aparece en la app (con IVA) y tu costo real de preparar cada platillo.</p>
+    <div class="tablewrap menu-table">
+      <table id="menu-table">
+        <thead>
+          <tr>
+            <th>Platillo</th>
+            <th class="num">Precio en app ($)</th>
+            <th class="num">Costo insumos ($)</th>
+            <th class="num">Empaque ($)</th>
+            <th class="num">Merma (%)</th>
+          </tr>
+        </thead>
+        <tbody id="menu-body"></tbody>
+      </table>
+    </div>
+    <div style="margin-top:18px; display:flex; gap:12px; flex-wrap:wrap; align-items:center;">
+      <button class="btn" id="btn-audit">📡 Escanear mi menú</button>
+      <span class="sub" style="font-size:13px;">El diagnóstico corre en tu navegador — nada se envía a ningún servidor en este MVP.</span>
+    </div>
+  </div>
+
+  <div id="audit-results" style="display:none;">
+    <div class="card" style="margin-bottom:16px; text-align:center; padding:30px 22px;">
+      <div class="eyebrow">Diagnóstico de <span id="res-nombre"></span></div>
+      <div class="hero-number leak" id="res-fuga">$0</div>
+      <div class="sub" style="margin-top:4px;">de fuga estimada <strong>al mes, por sucursal</strong>, contra un margen sano del 22%</div>
+      <div style="margin-top:14px; display:flex; gap:18px; justify-content:center; flex-wrap:wrap;" id="res-chips"></div>
+      <p class="result-note">Incluye comisiones de app, empaque, merma y <span id="res-fiscal"></span>. Estimación sobre <span id="res-pedidos"></span> pedidos/mes distribuidos por popularidad.</p>
+    </div>
+    <h3 style="margin-bottom:10px;">Semáforo financiero por platillo y por app</h3>
+    <div id="res-dishes"></div>
+    <div class="card" style="margin-top:18px; display:flex; gap:16px; align-items:center; flex-wrap:wrap;">
+      <div style="flex:1; min-width:240px;">
+        <h3>Esto fue una foto. Tu margen se mueve todos los días.</h3>
+        <p class="sub" style="font-size:14px;">El aguacate subió 34% este trimestre. Con el <strong>Panel Pro</strong>, el radar vigila tus insumos y te avisa por WhatsApp antes de que un platillo entre en zona roja.</p>
+      </div>
+      <button class="btn" data-goto="panel">Activar Panel Pro → $79 USD/mes</button>
+    </div>
+  </div>
+</section>
+
+<!-- ============ PANEL PRO (MÓDULO 2) ============ -->
+<section class="view" id="view-panel">
+  <div class="wizard-head">
+    <h2 style="margin:0;">Panel de Control y Acción</h2>
+    <span class="free-tag" style="background:var(--accent-soft); color:var(--accent-ink);">Módulo 2 · Pro — demo con datos de Smash Burgers La Capital (3 sucursales)</span>
+  </div>
+
+  <div class="kpi-row">
+    <div class="card kpi">
+      <div class="k-label">Fuga identificada este mes</div>
+      <div class="k-value mono-num" id="kpi-fuga">—</div>
+      <div class="k-delta up">↑ $8,120 recuperados con cambios aplicados</div>
+    </div>
+    <div class="card kpi">
+      <div class="k-label">Margen promedio delivery</div>
+      <div class="k-value mono-num" id="kpi-margen">—</div>
+      <div class="k-delta flat">objetivo: 22% · comedor: 31%</div>
+    </div>
+    <div class="card kpi">
+      <div class="k-label">Combinaciones en zona roja</div>
+      <div class="k-value mono-num" id="kpi-rojos">—</div>
+      <div class="k-delta down">platillo × app perdiendo dinero</div>
+    </div>
+    <div class="card kpi">
+      <div class="k-label">Sucursales conectadas</div>
+      <div class="k-value mono-num">3</div>
+      <div class="k-delta flat">Roma · Nápoles · Del Valle</div>
+    </div>
+  </div>
+
+  <div class="panel-grid">
+    <div class="card">
+      <h3>Monitor de inflación de insumos</h3>
+      <p class="sub" style="font-size:13px;">Índice de precio (semana 1 = 100) · mercado de abastos + tus facturas por WhatsApp · últimas 12 semanas</p>
+      <div class="legend" id="chart-legend"></div>
+      <div class="chart-wrap">
+        <svg id="inflation-chart" width="100%" viewBox="0 0 560 300" role="img" aria-label="Índice de precios de aguacate, arrachera y queso en las últimas 12 semanas. El aguacate acumula un alza de 38 por ciento."></svg>
+        <div class="chart-tip" id="chart-tip"></div>
+      </div>
+      <p class="result-note">El aguacate acumula <strong style="color:var(--status-critical-text);">+38%</strong> en 12 semanas → tus recetas con guacamole se recalcularon automáticamente.</p>
+    </div>
+    <div class="card">
+      <h3>Alertas inteligentes · WhatsApp</h3>
+      <p class="sub" style="font-size:13px; margin-bottom:12px;">Lo que recibe el dueño en su teléfono. Sin abrir dashboards.</p>
+      <div class="wa-feed" id="wa-feed"></div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-bottom:16px;">
+    <h3>Cambio de precios con 1 clic</h3>
+    <p class="sub" style="font-size:13.5px; margin-bottom:12px;">Precios sugeridos por el radar para recuperar el margen. Un clic los empuja vía API a las 3 apps — sin abrir tres tabletas.</p>
+    <div class="tablewrap">
+      <table id="push-table">
+        <thead>
+          <tr>
+            <th>Platillo</th>
+            <th>Estado</th>
+            <th class="num">Precio actual</th>
+            <th class="num">Precio sugerido</th>
+            <th class="num">Margen: hoy → nuevo</th>
+            <th style="min-width:230px;">Acción</th>
+          </tr>
+        </thead>
+        <tbody id="push-body"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>Simulador de promociones</h3>
+    <p class="sub" style="font-size:13.5px;">Mide el impacto real <em>antes</em> de activar el botón de la promo en la app.</p>
+    <div class="grid3" style="margin-top:12px; gap:14px;">
+      <label class="field">Platillo
+        <select id="promo-dish"></select>
+      </label>
+      <label class="field">Promoción
+        <select id="promo-type">
+          <option value="2x1">2×1 (paga 1, preparas 2)</option>
+          <option value="envio">Envío gratis (absorbes ~$25)</option>
+          <option value="desc">Descuento 20%</option>
+        </select>
+      </label>
+      <label class="field">App
+        <select id="promo-app"></select>
+      </label>
+    </div>
+    <button class="btn small" id="btn-promo">Simular impacto</button>
+    <div class="promo-result" id="promo-result" style="display:none;"></div>
+  </div>
+</section>
+
+<!-- ============ PLAN DE NEGOCIO ============ -->
+<section class="view" id="view-plan">
+  <h2>Plan de negocio</h2>
+  <p class="sub" style="margin-bottom:22px;">Resumen ejecutivo para socios e inversionistas.</p>
+
+  <div class="grid2 plan-section">
+    <div class="card">
+      <div class="eyebrow">🎯 Cliente ideal (ICP)</div>
+      <h3>Cadenas medianas de alta rotación</h3>
+      <ul style="list-style:none; margin-top:10px;">
+        <li style="padding:5px 0; color:var(--ink-2);">🍔 Hamburguesas, alitas, sushi y dark kitchens con <strong style="color:var(--ink-1);">3–7 sucursales</strong></li>
+        <li style="padding:5px 0; color:var(--ink-2);">📱 Delivery ≥ <strong style="color:var(--ink-1);">40% de sus ingresos</strong> totales</li>
+        <li style="padding:5px 0; color:var(--ink-2);">🎟️ Ticket promedio <strong style="color:var(--ink-1);">$250–$400 MXN</strong></li>
+        <li style="padding:5px 0; color:var(--ink-2);">🖥️ Stack actual: Soft Restaurant / Hubster / Otter usados como caja registradora — <strong style="color:var(--ink-1);">operan a ciegas en rentabilidad</strong></li>
+        <li style="padding:5px 0; color:var(--ink-2);">🔟 Primeros 10 clientes: hamburguesas artesanales y cocinas ocultas metropolitanas que activan 2×1 agresivos en redes</li>
+      </ul>
+    </div>
+    <div class="card">
+      <div class="eyebrow">💰 Modelo de monetización</div>
+      <h3>Freemium con garantía de resultado</h3>
+      <p class="sub" style="margin:10px 0;">"Identificamos ≥ <strong style="color:var(--ink-1);">$15,000 MXN/mes en fugas</strong> en 14 días, o tu suscripción es gratis."</p>
+      <div class="tablewrap"><table>
+        <tr><td>Nivel gratis</td><td class="num">Auditoría de 5 platillos estrella</td></tr>
+        <tr><td>Suscripción Pro</td><td class="num"><strong>$79 USD/mes por sucursal</strong></td></tr>
+        <tr><td>Cobro</td><td class="num">Mensual automatizado a TDC</td></tr>
+        <tr><td>Meta MRR</td><td class="num"><strong>$10,000 USD ≈ 127 sucursales</strong></td></tr>
+      </table></div>
+    </div>
+  </div>
+
+  <div class="card plan-section">
+    <div class="eyebrow">📈 Go-to-market · CAC ultra bajo, sin vendedores</div>
+    <div class="grid3" style="margin-top:10px;">
+      <div>
+        <h3>1 · Scraping automatizado</h3>
+        <p class="sub" style="font-size:14px;">Extraemos menús públicos de restaurantes locales directo de Rappi y Uber Eats.</p>
+      </div>
+      <div>
+        <h3>2 · Simulación de fugas</h3>
+        <p class="sub" style="font-size:14px;">Con promedios de industria, calculamos cuánto pierde ese restaurante en su platillo principal.</p>
+      </div>
+      <div>
+        <h3>3 · Outbound personalizado</h3>
+        <p class="sub" style="font-size:14px;">Video de 1 minuto (tipo Loom) al dueño por Instagram/WhatsApp mostrando la fuga de <em>su propio menú</em>. CTA: "Entra gratis a ver el diagnóstico completo".</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="card risk plan-section">
+    <div class="eyebrow" style="color:var(--status-warn-text);">⚠️ Riesgo crítico: churn del "ya lo arreglé"</div>
+    <div class="grid2" style="margin-top:8px;">
+      <div>
+        <h3>El riesgo</h3>
+        <p class="sub" style="font-size:14px;">El cliente usa la calculadora el primer mes, corrige sus precios en Rappi y cancela porque siente que "ya resolvió el problema".</p>
+      </div>
+      <div>
+        <h3>La mitigación: un sistema vivo</h3>
+        <p class="sub" style="font-size:14px;">El margen no es una foto: los insumos fluctúan cada semana. Al cancelar se apagan las alertas de WhatsApp y el monitoreo de inflación — el restaurante vuelve a quedar a ciegas frente al mercado. El valor está en la <strong style="color:var(--ink-1);">vigilancia continua</strong>, no en el cálculo puntual.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="eyebrow">🛠️ Arquitectura de esta fase (lo que estás viendo)</div>
+    <div class="grid2" style="margin-top:8px;">
+      <div>
+        <h3>Módulo 1 · Auditor (gancho gratis)</h3>
+        <p class="sub" style="font-size:14px;">Registro sin fricción (correo + WhatsApp + menú) → algoritmo de comisiones, empaque, mermas y retenciones IVA/ISR del régimen de Plataformas Tecnológicas → semáforo financiero. <strong style="color:var(--ink-1);">Funcional en esta demo.</strong></p>
+      </div>
+      <div>
+        <h3>Módulo 2 · Panel de acción (de pago)</h3>
+        <p class="sub" style="font-size:14px;">Recetas vinculadas a inflación, alertas por WhatsApp, cambio de precio con 1 clic vía API a Rappi/DiDi/Uber Eats y simulador de promociones. <strong style="color:var(--ink-1);">Demo interactiva con datos simulados</strong>; la integración por API es la siguiente fase.</p>
+      </div>
+    </div>
+  </div>
+
+  <p class="footer-note">RadarNewsOS · MVP de demostración · Los cálculos fiscales están simplificados con fines ilustrativos y no constituyen asesoría fiscal.</p>
+</section>
+
+</main>
+
+<script>
+/* =================== Motor de cálculo =================== */
+const IVA = 0.16;
+const TARGET = 0.22; // margen objetivo sano
+
+const APPS = [
+  { id: 'rappi', name: 'Rappi',     com: 28, on: true },
+  { id: 'didi',  name: 'DiDi Food', com: 25, on: true },
+  { id: 'uber',  name: 'Uber Eats', com: 30, on: true },
+];
+
+const DISHES = [
+  { name: 'Smash Burger Clásica',   precio: 145, insumos: 52, empaque: 12, merma: 4, peso: 0.30 },
+  { name: 'Doble Tocino BBQ',       precio: 189, insumos: 78, empaque: 12, merma: 4, peso: 0.25 },
+  { name: 'Alitas BBQ (10 pz)',     precio: 159, insumos: 70, empaque: 14, merma: 6, peso: 0.20 },
+  { name: 'Papas Gajo con Queso',   precio:  89, insumos: 28, empaque:  9, merma: 3, peso: 0.15 },
+  { name: 'Guacamole con Totopos',  precio: 120, insumos: 58, empaque:  8, merma: 8, peso: 0.10 },
+];
+
+const fmt$ = new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN', maximumFractionDigits: 0 });
+const fmt$2 = new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN', minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const pct = v => (v * 100).toFixed(1).replace('.0', '') + '%';
+
+// Margen de un platillo en una app. regimen: 'pf' | 'pm'
+function margen(dish, comPct, regimen) {
+  const base = dish.precio / (1 + IVA);            // ingreso sin IVA
+  const comision = base * (comPct / 100);
+  const retIsr = regimen === 'pf' ? base * 0.01 : 0; // retención ISR plataformas tecnológicas
+  const costo = dish.insumos * (1 + dish.merma / 100) + dish.empaque;
+  const m = base - comision - retIsr - costo;
+  return { base, comision, retIsr, costo, m, mPct: m / base };
+}
+
+function estado(mPct) {
+  if (mPct < 0.08) return 'rojo';
+  if (mPct < TARGET) return 'amarillo';
+  return 'verde';
+}
+const ESTADO_TXT = { rojo: 'Rojo · pierde', amarillo: 'Amarillo · en riesgo', verde: 'Verde · sano' };
+
+// Precio (con IVA) para alcanzar el margen objetivo en la app más cara activa
+function precioSugerido(dish, comPct, regimen) {
+  const isr = regimen === 'pf' ? 0.01 : 0;
+  const costo = dish.insumos * (1 + dish.merma / 100) + dish.empaque;
+  const base = costo / (1 - comPct / 100 - isr - TARGET);
+  return Math.ceil((base * (1 + IVA)) / 1) ;
+}
+
+/* =================== Navegación =================== */
+const tabs = document.getElementById('tabs');
+function goto(view) {
+  document.querySelectorAll('.view').forEach(s => s.classList.toggle('active', s.id === 'view-' + view));
+  tabs.querySelectorAll('button').forEach(b => b.classList.toggle('active', b.dataset.view === view));
+  window.scrollTo({ top: 0 });
+}
+tabs.addEventListener('click', e => { if (e.target.dataset.view) goto(e.target.dataset.view); });
+document.addEventListener('click', e => {
+  const g = e.target.closest('[data-goto]');
+  if (g) goto(g.dataset.goto);
+});
+
+/* =================== Auditor: formulario =================== */
+const appTogglesEl = document.getElementById('app-toggles');
+APPS.forEach((a, i) => {
+  const el = document.createElement('label');
+  el.className = 'app-toggle' + (a.on ? ' on' : '');
+  el.innerHTML = `
+    <input type="checkbox" ${a.on ? 'checked' : ''} data-i="${i}">
+    <div>
+      <div class="name">${a.name}</div>
+      <div class="com">comisión <input type="number" value="${a.com}" min="0" max="45" data-com="${i}"> %</div>
+    </div>`;
+  appTogglesEl.appendChild(el);
+});
+appTogglesEl.addEventListener('change', e => {
+  if (e.target.dataset.i !== undefined) {
+    const i = +e.target.dataset.i;
+    APPS[i].on = e.target.checked;
+    e.target.closest('.app-toggle').classList.toggle('on', e.target.checked);
+  }
+  if (e.target.dataset.com !== undefined) APPS[+e.target.dataset.com].com = +e.target.value || 0;
+});
+
+const menuBody = document.getElementById('menu-body');
+DISHES.forEach((d, i) => {
+  const tr = document.createElement('tr');
+  tr.innerHTML = `
+    <td><input class="name-in" value="${d.name}" data-f="name" data-i="${i}"></td>
+    <td class="num"><input type="number" value="${d.precio}" min="1" data-f="precio" data-i="${i}"></td>
+    <td class="num"><input type="number" value="${d.insumos}" min="0" data-f="insumos" data-i="${i}"></td>
+    <td class="num"><input type="number" value="${d.empaque}" min="0" data-f="empaque" data-i="${i}"></td>
+    <td class="num"><input type="number" value="${d.merma}" min="0" max="40" data-f="merma" data-i="${i}"></td>`;
+  menuBody.appendChild(tr);
+});
+menuBody.addEventListener('input', e => {
+  const { f, i } = e.target.dataset;
+  if (f) DISHES[+i][f] = f === 'name' ? e.target.value : (+e.target.value || 0);
+});
+
+/* =================== Auditor: diagnóstico =================== */
+document.getElementById('btn-audit').addEventListener('click', () => {
+  const regimen = document.getElementById('in-regimen').value;
+  const pedidos = +document.getElementById('in-pedidos').value || 0;
+  const apps = APPS.filter(a => a.on);
+  if (!apps.length) { alert('Activa al menos una app de delivery.'); return; }
+
+  let fugaTotal = 0;
+  const counts = { rojo: 0, amarillo: 0, verde: 0 };
+  const dishesHtml = DISHES.map(d => {
+    const pedidosDish = pedidos * d.peso;
+    const rows = apps.map(a => {
+      const r = margen(d, a.com, regimen);
+      const st = estado(r.mPct);
+      counts[st]++;
+      const fuga = Math.max(0, TARGET * r.base - r.m) * (pedidosDish / apps.length);
+      fugaTotal += fuga;
+      const w = Math.max(2, Math.min(100, (r.mPct / 0.35) * 100));
+      return `
+        <div class="appbar-row">
+          <span class="appname">${a.name}</span>
+          <div class="appbar-track"><div class="appbar-fill ${st}" style="width:${w.toFixed(1)}%"></div></div>
+          <div class="chipcell">
+            <span class="mval">${fmt$2.format(r.m)}</span>
+            <span class="chip ${st}"><span class="dot"></span>${pct(r.mPct)}</span>
+          </div>
+        </div>`;
+    }).join('');
+
+    const worstApp = apps.reduce((w, a) => a.com > w.com ? a : w, apps[0]);
+    const worst = margen(d, worstApp.com, regimen);
+    const sug = worst.mPct < TARGET
+      ? `<div class="sugerencia">💡 Sube <strong>${d.name}</strong> de <strong>${fmt$.format(d.precio)}</strong> a <strong>${fmt$.format(precioSugerido(d, worstApp.com, regimen))}</strong> para llegar al 22% de margen incluso en ${worstApp.name}.</div>`
+      : `<div class="sugerencia">✅ <strong>${d.name}</strong> mantiene margen sano en todas tus apps. No lo toques.</div>`;
+
+    const costo = d.insumos * (1 + d.merma / 100) + d.empaque;
+    return `
+      <div class="card dish-result">
+        <div class="dish-head">
+          <h3>${d.name}</h3>
+          <span class="chip" style="background:var(--page); color:var(--ink-2);">precio app ${fmt$.format(d.precio)}</span>
+          <span class="cost">costo real por pedido (insumos + merma + empaque): ${fmt$2.format(costo)}</span>
+        </div>
+        ${rows}${sug}
+      </div>`;
+  }).join('');
+
+  document.getElementById('res-nombre').textContent = document.getElementById('in-nombre').value || 'tu restaurante';
+  document.getElementById('res-fuga').textContent = fmt$.format(fugaTotal);
+  document.getElementById('res-pedidos').textContent = pedidos.toLocaleString('es-MX');
+  document.getElementById('res-fiscal').textContent = regimen === 'pf'
+    ? 'retenciones de Persona Física (ISR 1% + IVA 8% retenido por la plataforma)'
+    : 'régimen de Persona Moral (sin retención en plataforma)';
+  document.getElementById('res-chips').innerHTML = `
+    <span class="chip rojo"><span class="dot"></span>${counts.rojo} en rojo</span>
+    <span class="chip amarillo"><span class="dot"></span>${counts.amarillo} en amarillo</span>
+    <span class="chip verde"><span class="dot"></span>${counts.verde} en verde</span>`;
+  document.getElementById('res-dishes').innerHTML = dishesHtml;
+  const res = document.getElementById('audit-results');
+  res.style.display = 'block';
+  res.scrollIntoView({ behavior: 'smooth', block: 'start' });
+});
+
+/* =================== Panel Pro: KPIs =================== */
+(function kpis() {
+  const pedidos = 1500;
+  const apps = APPS;
+  let fuga = 0, mSum = 0, n = 0, rojos = 0;
+  DISHES.forEach(d => {
+    apps.forEach(a => {
+      const r = margen(d, a.com, 'pf');
+      mSum += r.mPct; n++;
+      if (estado(r.mPct) === 'rojo') rojos++;
+      fuga += Math.max(0, TARGET * r.base - r.m) * (pedidos * d.peso / apps.length);
+    });
+  });
+  document.getElementById('kpi-fuga').textContent = fmt$.format(fuga * 3); // 3 sucursales
+  document.getElementById('kpi-margen').textContent = pct(mSum / n);
+  document.getElementById('kpi-rojos').textContent = rojos * 3 + ' / ' + n * 3;
+})();
+
+/* =================== Panel Pro: gráfica de inflación =================== */
+const SERIES = [
+  { name: 'Aguacate',         color: 'var(--series-3)', data: [100,103,109,114,112,118,124,121,127,131,134,138] },
+  { name: 'Arrachera',        color: 'var(--series-1)', data: [100,101,103,102,105,106,108,107,110,111,112,113] },
+  { name: 'Queso',            color: 'var(--series-2)', data: [100,100,102,101,103,104,103,105,106,106,107,108] },
+];
+document.getElementById('chart-legend').innerHTML = SERIES.map(s =>
+  `<span class="li"><span class="sw" style="background:${s.color}"></span>${s.name}</span>`).join('');
+
+(function chart() {
+  const svg = document.getElementById('inflation-chart');
+  const W = 560, H = 300, m = { t: 16, r: 118, b: 30, l: 40 };
+  const iw = W - m.l - m.r, ih = H - m.t - m.b;
+  const yMin = 95, yMax = 142, weeks = 12;
+  const x = i => m.l + (i / (weeks - 1)) * iw;
+  const y = v => m.t + (1 - (v - yMin) / (yMax - yMin)) * ih;
+  let g = '';
+
+  for (let v = 100; v <= 140; v += 10) {
+    g += `<line x1="${m.l}" y1="${y(v)}" x2="${m.l + iw}" y2="${y(v)}" stroke="var(--grid)" stroke-width="1"/>`;
+    g += `<text x="${m.l - 8}" y="${y(v) + 4}" text-anchor="end" font-size="11" fill="var(--ink-3)">${v}</text>`;
+  }
+  for (let i = 0; i < weeks; i += 2) {
+    g += `<text x="${x(i)}" y="${H - 8}" text-anchor="middle" font-size="11" fill="var(--ink-3)">S${i + 1}</text>`;
+  }
+  g += `<line x1="${m.l}" y1="${m.t + ih}" x2="${m.l + iw}" y2="${m.t + ih}" stroke="var(--baseline)" stroke-width="1"/>`;
+
+  SERIES.forEach(s => {
+    const pts = s.data.map((v, i) => `${x(i).toFixed(1)},${y(v).toFixed(1)}`).join(' ');
+    g += `<polyline points="${pts}" fill="none" stroke="${s.color}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>`;
+    const last = s.data[weeks - 1];
+    g += `<circle cx="${x(weeks - 1)}" cy="${y(last)}" r="3.5" fill="${s.color}" stroke="var(--surface-1)" stroke-width="2"/>`;
+    g += `<text x="${x(weeks - 1) + 9}" y="${y(last) + 4}" font-size="11.5" font-weight="650" fill="var(--ink-1)">${s.name} +${last - 100}%</text>`;
+  });
+  g += `<line id="crosshair" x1="0" y1="${m.t}" x2="0" y2="${m.t + ih}" stroke="var(--baseline)" stroke-width="1" stroke-dasharray="3 3" style="display:none"/>`;
+  svg.innerHTML = g;
+
+  const tip = document.getElementById('chart-tip');
+  const cross = svg.querySelector('#crosshair');
+  svg.addEventListener('mousemove', ev => {
+    const rect = svg.getBoundingClientRect();
+    const sx = (ev.clientX - rect.left) * (W / rect.width);
+    const i = Math.max(0, Math.min(weeks - 1, Math.round(((sx - m.l) / iw) * (weeks - 1))));
+    cross.style.display = 'block';
+    cross.setAttribute('x1', x(i)); cross.setAttribute('x2', x(i));
+    tip.style.display = 'block';
+    tip.innerHTML = `<div class="t-head">Semana ${i + 1}</div>` + SERIES.map(s =>
+      `<div class="t-row"><span class="sw" style="background:${s.color}"></span>${s.name}<b>${s.data[i]}</b></div>`).join('');
+    const px = (x(i) / W) * rect.width;
+    tip.style.left = Math.min(rect.width - 170, Math.max(0, px + 12)) + 'px';
+    tip.style.top = ((ev.clientY - rect.top) - 20) + 'px';
+  });
+  svg.addEventListener('mouseleave', () => { tip.style.display = 'none'; cross.style.display = 'none'; });
+})();
+
+/* =================== Panel Pro: alertas WhatsApp =================== */
+const ALERTS = [
+  { time: 'hoy · 7:42', body: `🔴 <strong>Zona roja.</strong> El aguacate subió 6% esta semana. Tu <strong>Guacamole con Totopos</strong> ahora pierde <strong>$3.40 por pedido en DiDi Food</strong>. Sugerencia: súbelo de <strong>$120 a $138</strong> para mantener tu margen.`, cta: 'Aplicar $138 en las 3 apps' },
+  { time: 'hoy · 7:41', body: `🟡 <strong>Margen en riesgo.</strong> La arrachera acumula +13% en el trimestre. <strong>Doble Tocino BBQ</strong> bajó a 11% de margen en Uber Eats. Sugerencia: <strong>$189 → $205</strong>.`, cta: 'Aplicar $205 en las 3 apps' },
+  { time: 'ayer · 18:03', body: `📸 Recibimos tu factura del proveedor de carne (foto). Actualizamos <strong>4 recetas</strong> con el nuevo costo de arrachera: <strong>$186/kg → $204/kg</strong>.`, cta: null },
+  { time: 'ayer · 12:15', body: `🟢 <strong>Buena noticia.</strong> Aplicaste el nuevo precio de las Alitas hace 7 días: el volumen se mantuvo (−2%) y recuperaste <strong>$2,940</strong> de margen esta semana.`, cta: null },
+  { time: 'lun · 9:00', body: `⚠️ <strong>Antes de activar ese 2×1…</strong> Detectamos que programaste "2×1 en Smash Clásica" en Rappi para el viernes. Con tu costo actual perderías <strong>$41.10 por pedido</strong>. Corre el simulador antes de confirmar.`, cta: 'Abrir simulador' },
+];
+document.getElementById('wa-feed').innerHTML = ALERTS.map(a => `
+  <div class="wa-msg">
+    <div class="wa-meta">
+      <strong style="font-size:12.5px;">📡 RadarNewsOS</strong>
+      <span class="wa-time">${a.time}</span>
+    </div>
+    <p>${a.body}</p>
+    ${a.cta ? `<div class="wa-actions"><button class="btn small wa-cta">${a.cta}</button></div>` : ''}
+  </div>`).join('');
+document.getElementById('wa-feed').addEventListener('click', e => {
+  const b = e.target.closest('.wa-cta');
+  if (!b) return;
+  if (b.textContent.includes('simulador')) {
+    document.getElementById('view-panel').scrollIntoView();
+    document.getElementById('promo-result').scrollIntoView({ behavior: 'smooth', block: 'center' });
+  } else {
+    b.textContent = '✓ Enviado a Rappi · DiDi · Uber Eats';
+    b.classList.add('done');
+    b.disabled = true;
+  }
+});
+
+/* =================== Panel Pro: cambio con 1 clic =================== */
+(function pushTable() {
+  const regimen = 'pf';
+  const rows = DISHES.map((d, i) => {
+    const worstApp = APPS.reduce((w, a) => a.com > w.com ? a : w, APPS[0]);
+    const r = margen(d, worstApp.com, regimen);
+    const st = estado(r.mPct);
+    if (st === 'verde') return '';
+    const nuevo = precioSugerido(d, worstApp.com, regimen);
+    const dNew = { ...d, precio: nuevo };
+    const rNew = margen(dNew, worstApp.com, regimen);
+    return `
+      <tr data-i="${i}">
+        <td><strong>${d.name}</strong></td>
+        <td><span class="chip ${st}"><span class="dot"></span>${ESTADO_TXT[st]}</span></td>
+        <td class="num">${fmt$.format(d.precio)}</td>
+        <td class="num"><strong>${fmt$.format(nuevo)}</strong></td>
+        <td class="num"><span style="color:var(--status-critical-text)">${pct(r.mPct)}</span> → <strong style="color:var(--status-good-text)">${pct(rNew.mPct)}</strong></td>
+        <td>
+          <button class="btn small push-btn">Aplicar en 3 apps</button>
+          <div class="push-status" style="display:none;"><span data-app="Rappi">Rappi…</span><span data-app="DiDi">DiDi…</span><span data-app="Uber Eats">Uber Eats…</span></div>
+        </td>
+      </tr>`;
+  }).join('');
+  document.getElementById('push-body').innerHTML = rows || '<tr><td colspan="6">🎉 Todos tus platillos están en zona verde.</td></tr>';
+})();
+document.getElementById('push-body').addEventListener('click', e => {
+  const btn = e.target.closest('.push-btn');
+  if (!btn) return;
+  const status = btn.nextElementSibling;
+  btn.style.display = 'none';
+  status.style.display = 'flex';
+  const spans = status.querySelectorAll('span');
+  spans.forEach((s, i) => {
+    setTimeout(() => { s.textContent = '✓ ' + s.dataset.app; s.classList.add('ok'); }, 500 + i * 550);
+  });
+  setTimeout(() => {
+    const row = btn.closest('tr');
+    const chipCell = row.children[1];
+    chipCell.innerHTML = '<span class="chip verde"><span class="dot"></span>Verde · actualizado</span>';
+  }, 500 + spans.length * 550);
+});
+
+/* =================== Panel Pro: simulador de promociones =================== */
+const promoDish = document.getElementById('promo-dish');
+const promoApp = document.getElementById('promo-app');
+DISHES.forEach((d, i) => promoDish.insertAdjacentHTML('beforeend', `<option value="${i}">${d.name}</option>`));
+APPS.forEach((a, i) => promoApp.insertAdjacentHTML('beforeend', `<option value="${i}">${a.name} (${a.com}%)</option>`));
+
+document.getElementById('btn-promo').addEventListener('click', () => {
+  const d = DISHES[+promoDish.value];
+  const a = APPS[+promoApp.value];
+  const tipo = document.getElementById('promo-type').value;
+  const regimen = 'pf';
+  const normal = margen(d, a.com, regimen);
+  let promo, label, nota;
+
+  if (tipo === '2x1') {
+    const costo2 = 2 * (d.insumos * (1 + d.merma / 100) + d.empaque);
+    const base = d.precio / (1 + IVA);
+    const m = base - base * (a.com / 100) - base * 0.01 - costo2;
+    promo = { m, mPct: m / base };
+    label = '2×1';
+    nota = 'Cobras 1 platillo pero preparas y empacas 2. La comisión se calcula sobre lo cobrado.';
+  } else if (tipo === 'envio') {
+    const m = normal.m - 25;
+    promo = { m, mPct: m / normal.base };
+    label = 'Envío gratis';
+    nota = 'Absorbes ~$25 MXN de subsidio de envío por pedido.';
+  } else {
+    const dDesc = { ...d, precio: d.precio * 0.8 };
+    promo = margen(dDesc, a.com, regimen);
+    label = 'Descuento 20%';
+    nota = 'La comisión de la app se cobra sobre el precio ya descontado.';
+  }
+
+  const st = estado(promo.mPct);
+  const delta = promo.m - normal.m;
+  const breakEven = Math.ceil((normal.m > 0 && delta < 0) ? (Math.abs(delta) / normal.m + 1) * 100 - 100 : 0);
+  const verdictos = {
+    rojo: `❌ <strong>No la actives así.</strong> Con "${label}" en ${a.name}, <strong>${d.name}</strong> ${promo.m < 0 ? 'pierde dinero en cada pedido' : 'queda con margen crítico'}. ${breakEven > 0 ? `Necesitarías vender <strong>+${breakEven}% más volumen</strong> solo para quedar tablas.` : ''}`,
+    amarillo: `⚠️ <strong>Úsala con cuidado.</strong> "${label}" deja a <strong>${d.name}</strong> con margen en riesgo en ${a.name}. Funciona solo si sube tu ticket promedio con complementos.`,
+    verde: `✅ <strong>Adelante.</strong> "${label}" mantiene a <strong>${d.name}</strong> con margen sano en ${a.name}. Buena palanca de volumen.`,
+  };
+  const el = document.getElementById('promo-result');
+  el.style.display = 'block';
+  el.innerHTML = `
+    <div class="promo-verdict">
+      <span class="chip ${st}"><span class="dot"></span>${ESTADO_TXT[st]}</span>
+      <span style="font-size:14px;">${verdictos[st]}</span>
+    </div>
+    <div class="promo-nums">
+      <div class="pn"><div class="l">Margen sin promo</div><div class="v">${fmt$2.format(normal.m)} <span style="font-size:12px; color:var(--ink-3);">(${pct(normal.mPct)})</span></div></div>
+      <div class="pn"><div class="l">Margen con "${label}"</div><div class="v" style="color:${promo.m < 0 ? 'var(--status-critical-text)' : 'inherit'}">${fmt$2.format(promo.m)} <span style="font-size:12px; color:var(--ink-3);">(${pct(promo.mPct)})</span></div></div>
+      <div class="pn"><div class="l">Impacto por pedido</div><div class="v" style="color:${delta < 0 ? 'var(--status-critical-text)' : 'var(--status-good-text)'}">${delta < 0 ? '−' : '+'}${fmt$2.format(Math.abs(delta))}</div></div>
+    </div>
+    <p class="result-note">${nota}</p>`;
+});
+</script>
+</body>
+</html>
