@@ -23,6 +23,10 @@ yarn-error.log*
 # Build artifacts
 *.tsbuildinfo
 
+# PDFs generados por NOM-Label AI
+*.pdf
+!docs/**/*.pdf
+
 # OS / editor
 .DS_Store
 Thumbs.db

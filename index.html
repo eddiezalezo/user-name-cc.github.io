@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NOM-Label AI — Etiquetado NOM-050 en segundos</title>
+  <link rel="stylesheet" href="/static/tailwind.css" />
+  <style>
+    :root { color-scheme: light; }
+    body { font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Helvetica, Arial, sans-serif; -webkit-font-smoothing: antialiased; }
+    .glass { backdrop-filter: blur(24px) saturate(160%); -webkit-backdrop-filter: blur(24px) saturate(160%); background: rgba(255, 255, 255, 0.6); }
+    select { appearance: none; -webkit-appearance: none; background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%2386868B' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 1rem center; }
+    ::placeholder { color: #86868B; }
+    textarea:focus, select:focus { outline: none; border-color: #1D1D1F; }
+    select:focus-visible, button:focus-visible, a:focus-visible { outline: 2px solid #1D1D1F; outline-offset: 2px; }
+    h1 { text-wrap: balance; }
+  </style>
+</head>
+<body class="bg-white text-[#1D1D1F] min-h-screen">
+
+  <!-- Barra superior -->
+  <header class="border-b border-[#D2D2D7]">
+    <div class="max-w-6xl mx-auto px-6 h-14 flex items-center justify-between">
+      <span class="text-sm font-semibold tracking-tight">NOM-Label&nbsp;AI</span>
+      <span class="text-xs text-[#86868B]">Etiquetado NOM-050 · Listo para impresión térmica 4×3&Prime;</span>
+    </div>
+  </header>
+
+  <main class="max-w-6xl mx-auto px-6 pt-14 pb-20">
+    <div class="text-center mb-12">
+      <h1 class="text-4xl md:text-5xl font-semibold tracking-tight">De Alibaba a la aduana.<br class="hidden md:block" /> En diez segundos.</h1>
+      <p class="mt-4 text-lg text-[#86868B] max-w-xl mx-auto">Pega la ficha técnica en inglés. Recibe la etiqueta NOM-050 en español legal, lista para enviarse al fabricante.</p>
+    </div>
+
+    <div class="grid md:grid-cols-2 gap-6 items-stretch">
+
+      <!-- Panel izquierdo: entrada -->
+      <section class="flex flex-col gap-4">
+        <textarea id="ficha" rows="12" spellcheck="false"
+          class="w-full flex-1 resize-none rounded-3xl border border-[#D2D2D7] p-6 text-[15px] leading-relaxed transition-colors duration-200"
+          placeholder="Pega aquí la ficha técnica de Alibaba…&#10;&#10;Ej. Wireless running earphones, Bluetooth 5.3, lithium battery 400 mAh, made in Shenzhen China, model TWS-09…"></textarea>
+
+        <div class="relative">
+          <select id="nom" class="w-full rounded-full border border-[#D2D2D7] px-6 py-3.5 text-[15px] text-[#1D1D1F] bg-white cursor-pointer transition-colors duration-200">
+            <option value="NOM-050-SCFI-2004" selected>NOM-050 · Información comercial general</option>
+            <option value="NOM-024-SCFI-2013">NOM-024 · Aparatos electrónicos y eléctricos</option>
+            <option value="NOM-015-SCFI-2007">NOM-015 · Juguetes</option>
+          </select>
+        </div>
+      </section>
+
+      <!-- Panel derecho: vista previa con desenfoque de cristal -->
+      <section class="glass rounded-3xl border border-[#D2D2D7] p-6 flex flex-col">
+        <div class="flex items-center justify-between mb-4">
+          <h2 class="text-sm font-semibold">Vista previa</h2>
+          <span id="estado" class="text-xs text-[#86868B]">Esperando ficha técnica</span>
+        </div>
+        <div id="preview-wrap" class="flex-1 min-h-[320px] rounded-2xl border border-[#D2D2D7] bg-white/70 flex items-center justify-center overflow-hidden">
+          <p id="preview-empty" class="text-sm text-[#86868B] px-8 text-center">La etiqueta 4×3&Prime; aparecerá aquí una vez generada.</p>
+          <iframe id="preview" title="Vista previa de la etiqueta" class="hidden w-full h-full min-h-[320px]"></iframe>
+        </div>
+        <a id="descargar" download="etiqueta-nom050-4x3.pdf"
+           class="hidden mt-4 text-center text-sm text-[#1D1D1F] underline underline-offset-4 decoration-[#D2D2D7] hover:decoration-[#1D1D1F] transition-colors">
+          Descargar PDF
+        </a>
+      </section>
+    </div>
+
+    <!-- Botón principal: óvalo negro puro -->
+    <div class="flex justify-center mt-10">
+      <button id="generar"
+        class="rounded-full bg-black text-white text-[17px] font-medium px-12 py-4 transition-opacity duration-200 hover:opacity-80 disabled:opacity-40 disabled:cursor-not-allowed">
+        Generar Etiqueta Imprimible
+      </button>
+    </div>
+  </main>
+
+  <footer class="border-t border-[#D2D2D7]">
+    <div class="max-w-6xl mx-auto px-6 py-6 text-xs text-[#86868B]">
+      NOM-Label AI · Herramienta de apoyo al etiquetado. Verifique el dictamen final con su agente aduanal.
+    </div>
+  </footer>
+
+  <script>
+    const $ = (id) => document.getElementById(id);
+    const btn = $("generar"), estado = $("estado");
+
+    btn.addEventListener("click", async () => {
+      const ficha = $("ficha").value.trim();
+      if (!ficha) { estado.textContent = "Pega primero la ficha técnica"; return; }
+
+      btn.disabled = true;
+      estado.textContent = "Dictaminando con IA…";
+
+      try {
+        const res = await fetch("/api/v1/labels/generate", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ ficha_tecnica: ficha, tipo_nom: $("nom").value }),
+        });
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({}));
+          throw new Error(err.detail || `Error ${res.status}`);
+        }
+        const blob = await res.blob();
+        const url = URL.createObjectURL(blob);
+        $("preview-empty").classList.add("hidden");
+        const frame = $("preview");
+        frame.src = url + "#toolbar=0&navpanes=0";
+        frame.classList.remove("hidden");
+        const link = $("descargar");
+        link.href = url;
+        link.classList.remove("hidden");
+        estado.textContent = "Etiqueta lista";
+      } catch (e) {
+        estado.textContent = e.message || "Error al generar";
+      } finally {
+        btn.disabled = false;
+      }
+    });
+  </script>
+</body>
+</html>
