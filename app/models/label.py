@@ -48,6 +48,14 @@ class NOMLabelData(BaseModel):
         default="",
         description="Leyenda condicional sobre instructivo de uso, vacía si no aplica.",
     )
+    especificaciones_electricas: str = Field(
+        default="",
+        description="NOM-024: tensión (V), frecuencia (Hz) y consumo (W/A); vacío si no aplica.",
+    )
+    rango_edad: str = Field(
+        default="",
+        description="NOM-015: edad recomendada del juguete; vacío si no aplica.",
+    )
     codigo_barras: str = Field(
         ...,
         description="Contenido numérico del código de barras (EAN-13 simulado de 13 dígitos).",

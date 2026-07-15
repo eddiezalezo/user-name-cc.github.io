@@ -64,6 +64,18 @@ def generar_pdf_etiqueta(datos: NOMLabelData) -> BytesIO:
     c.drawRightString(PAGE_W - MARGIN, y, datos.contenido_neto.upper())
     y -= 4 * mm
 
+    # Especificaciones eléctricas (obligatorias bajo NOM-024)
+    if datos.especificaciones_electricas:
+        y = _draw_wrapped(
+            c, datos.especificaciones_electricas, MARGIN, y, FONT_BOLD, 7, CONTENT_W
+        )
+        y -= 1 * mm
+
+    # Rango de edad recomendado (obligatorio bajo NOM-015)
+    if datos.rango_edad:
+        y = _draw_wrapped(c, datos.rango_edad.upper(), MARGIN, y, FONT_BOLD, 7, CONTENT_W)
+        y -= 1 * mm
+
     # Importador responsable
     y = _draw_wrapped(c, datos.importador_rfc, MARGIN, y, FONT, 6.5, CONTENT_W)
     y -= 1 * mm

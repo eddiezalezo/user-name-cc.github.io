@@ -43,8 +43,16 @@ Cuerpo de la petición:
 }
 ```
 
-## Escalabilidad
+## Librería de Normas
 
-Para agregar la **NOM-024** (electrónicos) o la **NOM-015** (juguetes) basta con duplicar el `SYSTEM_PROMPT` en `gemini_service.py` con las reglas de la nueva norma y registrar la opción en el selector del frontend — el esquema Pydantic y el motor de PDF se reutilizan sin cambios.
+Normas soportadas (ver `GET /api/v1/labels/noms`):
+
+| Norma | Alcance | Campo condicional en la etiqueta |
+|---|---|---|
+| **NOM-050-SCFI-2004** | Información comercial general | — |
+| **NOM-024-SCFI-2013** | Aparatos electrónicos y eléctricos | `especificaciones_electricas` (V / Hz / W) |
+| **NOM-015-SCFI-2007** | Juguetes | `rango_edad` recomendado |
+
+Para agregar una norma nueva basta con registrar una entrada en `app/services/nom_registry.py` (reglas para el System Prompt + valores del dictamen simulado) y habilitarla en el selector del frontend — el esquema Pydantic, el servicio de Gemini y el motor de PDF se reutilizan sin cambios.
 
 > ⚠️ Herramienta de apoyo al etiquetado. El dictamen final debe verificarse con un agente aduanal certificado.

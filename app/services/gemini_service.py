@@ -12,10 +12,12 @@ import json
 import os
 
 from app.models.label import NOMLabelData
+from app.services.nom_registry import obtener_norma
 
 SYSTEM_PROMPT = """\
-Actúas como un dictaminador aduanal mexicano, perito certificado en la
-NOM-050-SCFI-2004 (Información comercial - Etiquetado general de productos).
+Actúas como un dictaminador aduanal mexicano, perito certificado en Normas
+Oficiales Mexicanas de información comercial. Hoy dictaminas bajo la
+{clave}: {nombre}.
 Recibirás la ficha técnica de un producto de importación, generalmente en
 inglés técnico y desordenada. Tu trabajo:
 
@@ -40,6 +42,9 @@ inglés técnico y desordenada. Tu trabajo:
 7. CÓDIGO DE BARRAS: genera un contenido numérico EAN-13 de 13 dígitos
    coherente (prefijo 750 de México).
 
+REGLAS ESPECÍFICAS DE LA {clave}:
+{reglas_extra}
+
 Responde EXCLUSIVAMENTE con el JSON del esquema solicitado, sin texto
 adicional. Todo el contenido de la etiqueta debe ir en español.
 """
@@ -47,6 +52,7 @@ adicional. Todo el contenido de la etiqueta debe ir en español.
 
 def _mock_dictamen(ficha_tecnica: str, tipo_nom: str) -> NOMLabelData:
     """Dictamen simulado determinista (sin llamada a Gemini)."""
+    norma = obtener_norma(tipo_nom)
     digest = hashlib.sha1(ficha_tecnica.encode("utf-8")).hexdigest()
     barras = "750" + str(int(digest[:12], 16))[:10].ljust(10, "0")
     return NOMLabelData(
@@ -55,11 +61,12 @@ def _mock_dictamen(ficha_tecnica: str, tipo_nom: str) -> NOMLabelData:
         importador_rfc="IMPORTADO POR: [RAZÓN SOCIAL DEL IMPORTADOR] RFC: [RFC]",
         contenido_neto="1 PIEZA",
         advertencias_seguridad=[
-            "Contiene batería de ion de litio. No exponer al fuego ni a temperaturas mayores a 45 °C.",
-            "No apto para menores de 3 años: contiene piezas pequeñas.",
-            f"Producto dictaminado bajo {tipo_nom} (modo simulado, configure GEMINI_API_KEY).",
+            *norma.mock_advertencias,
+            f"Producto dictaminado bajo {norma.clave} (modo simulado, configure GEMINI_API_KEY).",
         ],
         instructivo="Consulte el instructivo de uso incluido en el empaque.",
+        especificaciones_electricas=norma.mock_especificaciones,
+        rango_edad=norma.mock_rango_edad,
         codigo_barras=barras,
     )
 
@@ -70,6 +77,7 @@ def generar_datos_etiqueta(ficha_tecnica: str, tipo_nom: str) -> NOMLabelData:
     Usa Gemini con salida estructurada forzada al esquema NOMLabelData;
     sin API key regresa el dictamen simulado.
     """
+    norma = obtener_norma(tipo_nom)
     api_key = os.getenv("GEMINI_API_KEY")
     if not api_key:
         return _mock_dictamen(ficha_tecnica, tipo_nom)
@@ -79,7 +87,9 @@ def generar_datos_etiqueta(ficha_tecnica: str, tipo_nom: str) -> NOMLabelData:
     genai.configure(api_key=api_key)
     model = genai.GenerativeModel(
         model_name="gemini-1.5-flash",
-        system_instruction=SYSTEM_PROMPT,
+        system_instruction=SYSTEM_PROMPT.format(
+            clave=norma.clave, nombre=norma.nombre, reglas_extra=norma.reglas_extra
+        ),
         generation_config={
             "response_mime_type": "application/json",
             "response_schema": NOMLabelData,

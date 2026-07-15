@@ -5,14 +5,24 @@ from fastapi.responses import StreamingResponse
 
 from app.models.label import LabelRequest, NOMLabelData
 from app.services import gemini_service, pdf_service
+from app.services.nom_registry import NOMS
 
 router = APIRouter(prefix="/api/v1/labels", tags=["labels"])
 
 
+@router.get("/noms")
+def list_noms() -> list[dict]:
+    """Normas soportadas por la Librería de Normas."""
+    return [{"clave": n.clave, "nombre": n.nombre} for n in NOMS.values()]
+
+
 @router.post("/generate-mock", response_model=NOMLabelData)
 def generate_mock(payload: LabelRequest) -> NOMLabelData:
-    """Dictamen simulado: JSON con los campos obligatorios de la NOM-050."""
-    return gemini_service._mock_dictamen(payload.ficha_tecnica, payload.tipo_nom)
+    """Dictamen simulado: JSON con los campos obligatorios de la norma elegida."""
+    try:
+        return gemini_service._mock_dictamen(payload.ficha_tecnica, payload.tipo_nom)
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
 
 
 @router.post("/generate-json", response_model=NOMLabelData)
@@ -20,6 +30,8 @@ def generate_json(payload: LabelRequest) -> NOMLabelData:
     """Dictamen real vía Gemini (structured outputs) en formato JSON."""
     try:
         return gemini_service.generar_datos_etiqueta(payload.ficha_tecnica, payload.tipo_nom)
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
     except Exception as exc:  # error de la API de Gemini o parseo
         raise HTTPException(status_code=502, detail=f"Error del motor de IA: {exc}") from exc
 
@@ -29,6 +41,8 @@ def generate_pdf(payload: LabelRequest) -> StreamingResponse:
     """Flujo completo: ficha técnica -> Gemini -> PDF térmico 4x3\" descargable."""
     try:
         datos = gemini_service.generar_datos_etiqueta(payload.ficha_tecnica, payload.tipo_nom)
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
     except Exception as exc:
         raise HTTPException(status_code=502, detail=f"Error del motor de IA: {exc}") from exc
 
